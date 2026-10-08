@@ -1,18 +1,73 @@
 <!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#13233a"><title>Kiểm QR nhãn • QA</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172c43;background:#eef3f4;font-size:16px}*{box-sizing:border-box}body{margin:0}header{background:#13233a;color:white;padding:20px 16px}header>div,main{max-width:800px;margin:auto}h1{font-size:23px;margin:0 0 5px}.sub{font-size:13px;opacity:.75}main{padding:16px 12px 40px}.card{padding:20px;background:white;border:1px solid #d1dade;border-radius:12px;margin-bottom:12px}h2{font-size:17px;margin:0 0 15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-size:13px;color:#4d6375;margin-bottom:6px}input,select,button{font:inherit}input,select{padding:11px;border:1px solid #b8c8d2;border-radius:7px;width:100%;min-width:0;background:white;color:#172c43}button,.filebtn{background:#13233a;color:white;border:0;border-radius:7px;padding:11px 14px;cursor:pointer;min-height:44px;font-size:14px;font-weight:600;text-align:center;display:inline-block}button.secondary,.filebtn.secondary{background:#eaf0f4;color:#172c43}button:disabled{opacity:.45;cursor:default}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.full{width:100%}.hint{font-size:13px;color:#617788;margin:9px 0 0;line-height:1.6}.notice{padding:12px;border-radius:8px;background:#fff4d9;color:#765012;font-size:13px;margin-bottom:12px}.notice:empty{display:none}.number{display:inline-grid;place-items:center;background:#eaf0f4;border-radius:50%;width:27px;height:27px;margin-right:8px}#hits{max-height:230px;overflow:auto;margin-top:8px;display:grid;gap:5px}#hits button{text-align:left;background:#f1f5f7;color:#19354e;font-size:13px;font-weight:400;min-height:52px}#hits b{display:block}#chosen{margin-top:10px;line-height:1.6;font-size:14px}#verdict{border-radius:12px;padding:22px;color:white;margin:12px 0;background:#647482}#verdict.pass{background:#087748}#verdict.fail{background:#bd243a}#verdict.warn{background:#93600e}#verdict strong{font-size:28px;display:block}#reason{line-height:1.5;margin-top:8px}#scope{font-size:13px;opacity:.9;margin-top:10px}.check{display:flex;align-items:center;gap:7px;margin-top:12px}.check input{width:20px}.badge{padding:3px 7px;border-radius:5px;background:#eaf0f4;font-size:12px}.row{display:flex;gap:12px;align-items:center;justify-content:space-between}.ledger{border-top:1px solid #d9e2e7;padding:10px 0;font-size:13px;line-height:1.6}.ledger b{display:block}.pass-text{color:#087748}.fail-text{color:#bd243a}.warn-text{color:#93600e}details summary{cursor:pointer;font-weight:600;font-size:15px}details .body{margin-top:16px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.stats div{background:#f1f5f7;border-radius:7px;padding:12px;font-size:12px}.stats b{display:block;font-size:23px}dialog{width:min(95vw,620px);border:0;border-radius:12px;padding:18px}dialog::backdrop{background:#0a1420da}#reader{min-height:220px;margin:12px 0}video{max-width:100%}:focus-visible{outline:3px solid #428bd1;outline-offset:2px}[hidden]{display:none!important}footer{font-size:12px;color:#617788;text-align:center;padding:10px}#qr,#barcode{font-family:ui-monospace,Consolas,monospace;font-size:14px}@media(max-width:480px){.grid{grid-template-columns:1fr}.card{padding:16px}h1{font-size:21px}.stats b{font-size:20px}} 
-</style></head><body>
-<header><div><h1>Kiểm QR nhãn</h1><div class="sub">Đối chiếu mã đang chạy, QR và barcode bao bì</div></div></header>
+/* camera sheet */
+.cam{position:fixed;inset:0;z-index:20;background:#0A1420;color:#fff;display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px)}
+.cam.open{display:flex}
+.cam .ttl{font-size:17px;font-weight:600}
+.cam .sub{font-size:14px;opacity:.8;margin-top:2px}
+#reader{flex:1;margin:12px 0 8px;border-radius:10px;overflow:hidden;background:#000;min-height:260px}
+#khoanh{flex:1;margin:12px 0 8px;display:flex;align-items:center;justify-content:center;min-height:260px;overflow:hidden}
+#khoanh.hidden{display:none}
+#kcv{touch-action:none;max-width:100%;max-height:100%;border-radius:8px;background:#000}
+.camMsg{min-height:20px;font-size:14px;margin-bottom:8px;color:#FDE7A9}
+.camBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.cam .btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7)}
+#reader{position:relative}
+#liveVideo{width:100%;height:100%;object-fit:cover;display:block}
+#reader .guide{position:absolute;inset:12% 8%;border:2px solid rgba(255,255,255,.75);border-radius:12px;pointer-events:none}
+.chips{display:flex;gap:6px;margin-top:8px;min-height:26px}
+.chip{font-size:13px;padding:3px 10px;border-radius:999px;border:1.5px solid rgba(255,255,255,.6)}
+.chip.ok{background:#4ADE9B;color:#0A1420;border-color:#4ADE9B;font-weight:600}
+.camTools{display:flex;gap:8px;margin-bottom:8px}
+.camTools .btn{min-height:40px;padding:6px 12px;flex:1}
+.camTools .btn[aria-pressed="true"]{background:#fff;color:var(--ink)}
+#reader2{position:absolute;left:-9999px;top:0;width:300px;height:300px}
+#reader video{object-fit:cover}
+.cam .btn{background:#fff;color:var(--ink)}
+.hidden{display:none !important}
+
+
+:root{--ink:#13233a;--rule:#CDD5D7;--mono:ui-monospace,Consolas,monospace}header{padding:10px 12px;position:sticky;top:0;z-index:5}header>div,main{max-width:540px}.toprow{display:flex;align-items:center;gap:8px}.toprow h1{font-size:17px;margin:0 auto 0 0;white-space:nowrap}.toprow select,.toprow input{background:#22354f;color:white;border-color:#3a4e69;min-height:36px;padding:6px 8px}.toprow select{width:78px}.toprow input{width:110px}main{padding-top:12px}.card{padding:16px;border-radius:10px}.modebar{padding:10px 16px}.mrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.mrow+.mrow{margin-top:8px}.ml{font-size:13px;color:#617788;min-width:64px}.seg{display:inline-flex;border:1.5px solid #13233a;border-radius:8px;overflow:hidden}.seg button{min-height:32px;background:white;color:#13233a;border-radius:0;padding:5px 10px;font-size:13px;font-weight:500}.seg button[aria-pressed="true"]{background:#13233a;color:white}.seg button:disabled{opacity:.4}.modebar .hint{font-size:12px;margin:0}.field{display:flex;gap:8px}.field input{flex:1;width:0}.field button{flex:none}.number{border:2px solid #13233a;background:white;color:#13233a;width:26px;height:26px;font-size:13px}.done .number{background:#13233a;color:white}.manual{margin-top:10px}.manual summary{font-weight:400;font-size:13px;color:#617788;text-decoration:underline}.manual input{margin-top:8px}.card[aria-disabled="true"]{opacity:.45}.card[aria-disabled="true"] button[data-scan]{pointer-events:none}.hidden{display:none!important}.cam{height:100dvh;overscroll-behavior:contain}.cam .btn{font-size:16px}.cam #reader video{object-fit:contain}.cam .btn[aria-pressed="true"]{background:white;color:#13233a}.cam #reader{border-radius:12px}.cam .ttl{font-size:20px}.cam .guide{inset:12% 8%}.ledger{border:1px solid #d1dade;border-radius:8px;background:#f8fbfc;padding:10px 12px;margin-top:7px}.row h2{font-size:15px}footer{font-size:11px}#verdict strong{font-size:29px}@media(max-width:360px){.toprow input{width:82px}.toprow h1{font-size:15px}.toprow select{width:68px}.modebar{padding:10px}.mrow{gap:6px}.ml{min-width:57px}.seg button{padding:5px 8px}}
+.cam .wide{width:100%}.cam .btn{border-radius:8px}.cam button:disabled{opacity:.4}#camFile[hidden]{display:none!important}</style></head><body>
+<header><div class="toprow"><h1>Kiểm QR nhãn</h1><select id="site" aria-label="Site"></select><input id="person" aria-label="Tên người kiểm" placeholder="Tên người kiểm" autocomplete="name"></div></header>
 <main><div id="message" class="notice" role="status"></div>
-<section class="card"><div class="grid"><div><label for="site">Nhà máy / site</label><select id="site"></select></div><div><label for="person">Người kiểm</label><input id="person" placeholder="Nhập tên người kiểm" autocomplete="name"></div><div><label for="mode">Đối chiếu theo</label><select id="mode"><option value="TP">Mã thành phẩm (TP)</option><option value="PKG">Mã bao bì (PKG)</option><option value="NONE">Chỉ QR–barcode</option></select></div><div id="level"><label for="cap">Cấp bao bì</label><select id="cap"><option value="DON_VI">Nhãn / bao bì đơn vị</option><option value="THUNG">Thùng</option></select></div></div><label class="check"><input id="useQR" type="checkbox" checked>Kiểm QR trên nhãn đơn vị</label><div class="hint" id="modeHint"></div></section>
-<section class="card" id="product"><h2><span class="number">1</span><span id="productTitle">Chọn thành phẩm đang chạy</span></h2><label for="search">Tìm mã, tên sản phẩm hoặc barcode</label><input id="search" placeholder="Ví dụ: 03OT00534" autocomplete="off"><div id="hits"></div><div id="chosen"></div></section>
-<section class="card" id="qrCard"><h2><span class="number" id="qrNumber">2</span>Quét QR trên nhãn</h2><label for="qr">Nội dung QR</label><input id="qr" placeholder="https://i.tcx.com.vn/…" autocomplete="off" spellcheck="false"><div class="buttons"><button data-scan="qr">Mở camera</button><label class="filebtn secondary">Đọc ảnh QR<input data-file="qr" type="file" accept="image/*" hidden></label></div><p class="hint">Có thể dán nội dung QR hoặc dùng máy quét cầm tay.</p></section>
-<section class="card"><h2><span class="number" id="barNumber">3</span>Quét barcode trên bao bì</h2><label for="barcode">Dãy số dưới barcode</label><input id="barcode" inputmode="numeric" placeholder="GTIN 8, 12, 13 hoặc 14 số" autocomplete="off"><div class="buttons"><button data-scan="bar">Mở camera</button><label class="filebtn secondary">Đọc ảnh barcode<input data-file="bar" type="file" accept="image/*" hidden></label></div><div class="buttons"><button id="check" class="full">Đối chiếu</button></div></section>
+<section class="card modebar"><div class="mrow"><span class="ml">Đối chiếu</span><span class="seg"><button type="button" data-mode="PKG">Mã PKG</button><button type="button" data-mode="TP">Mã TP</button><button type="button" data-mode="NONE">Không</button></span></div><div class="mrow"><span class="ml">Quét QR</span><span class="seg"><button type="button" data-qr="1">Có</button><button type="button" data-qr="0">Không</button></span><span class="hint" id="modeHint"></span></div><select id="mode" hidden><option value="TP">TP</option><option value="PKG">PKG</option><option value="NONE">NONE</option></select><span id="level" hidden><select id="cap"><option value="ANY">ANY</option><option value="DON_VI">DON_VI</option><option value="THUNG">THUNG</option></select></span><input id="useQR" type="checkbox" hidden checked></section>
+<section class="card" id="product"><h2><span class="number">1</span><span id="productTitle">Chọn thành phẩm đang chạy</span></h2><div class="field"><input id="search" aria-label="Tìm mã sản phẩm" placeholder="Gõ mã TP, tên hoặc barcode" autocomplete="off"><button id="pick" type="button">Chọn</button></div><div id="hits"></div><div id="chosen"></div></section>
+<section class="card" id="qrCard"><h2><span class="number" id="qrNumber">2</span>Quét QR trên nhãn</h2><button class="full" data-scan="qr">Mở camera quét QR</button><div id="qrRead" class="hint"></div><details class="manual"><summary>Dán nội dung QR</summary><input id="qr" aria-label="Nội dung QR" placeholder="https://i.tcx.com.vn/…" autocomplete="off" spellcheck="false"></details></section>
+<section class="card" id="barCard"><h2><span class="number" id="barNumber">3</span>Quét barcode trên bao bì</h2><button class="full" data-scan="bar">Mở camera quét barcode</button><div id="barRead" class="hint"></div><details class="manual" id="manualBar"><summary>Không quét được? Gõ số barcode</summary><input id="barcode" aria-label="Barcode" inputmode="numeric" placeholder="Dãy số dưới barcode" autocomplete="off"><button id="check" class="full" style="margin-top:8px">Đối chiếu</button></details></section>
 <section id="verdict" hidden aria-live="polite"><strong id="status"></strong><div id="reason"></div><div id="scope"></div></section><div id="after" class="buttons" hidden><button id="save">Lưu lượt kiểm</button><button id="next" class="secondary">Kiểm nhãn tiếp</button></div>
-<section class="card" style="margin-top:16px"><div class="row"><h2 style="margin:0">Sổ kiểm trên máy</h2><button id="export" class="secondary">Xuất CSV</button></div><div class="stats"><div>Đạt<b id="countPass">0</b></div><div>Không đạt<b id="countFail">0</b></div><div>Cần xác nhận<b id="countWarn">0</b></div></div><div class="buttons"><label for="historySite">Lọc sổ kiểm</label><select id="historySite"><option value="">Tất cả site</option></select></div><div id="history"></div><p class="hint">Lưu trong trình duyệt này. Xuất CSV để giữ hồ sơ; chưa đồng bộ giữa các máy.</p></section>
-<details class="card"><summary>Master và cập nhật dữ liệu <span class="badge" id="masterCount"></span></summary><div class="body"><div id="masterInfo" class="hint"></div><div class="buttons"><label class="filebtn">Nạp master XLSX / CSV / JSON<input id="import" type="file" accept=".xlsx,.csv,.json" hidden></label><button id="downloadMaster" class="secondary">Xuất master JSON</button><button id="audit" class="secondary">Xuất danh sách cần rà</button></div><p class="hint">Giữ cột: ma_pkg, cap, gtin, item_tp, ten_sp, site, trang_thai, ly_do. Mã barcode giữ dạng Text. Chỉ dòng DA_DUYET, site rõ ràng và GTIN hợp lệ mới dùng để kết luận Đạt. Không tự suy diễn site từ site_goc.</p><p class="hint">QR hiện kiểm theo định dạng i.tcx.com.vn/ + 13 số GTIN + 11 ký tự sê-ri hex. Kiểm trùng QR chỉ trong lịch sử đã lưu trên máy này; không xác thực QR với nhà phát hành.</p></div></details>
-<footer>QA QR Label Check v1.0 · Scanner: html5-qrcode 2.3.8 (Apache-2.0)<br>Camera cần HTTPS hoặc localhost. Thư viện quét và nhập XLSX tải khi cần.</footer></main>
-<dialog id="camera"><div class="row"><b id="cameraTitle">Quét mã</b><button id="closeCamera" class="secondary">Đóng</button></div><div id="reader"></div><p id="cameraMsg" class="hint">Giữ mã rõ nét trong khung.</p></dialog>
+<section class="card" style="margin-top:16px"><div class="row"><h2 style="margin:0">Sổ kiểm</h2><span class="seg"><button id="localLedger" aria-pressed="true">Máy này</button><button id="allSite" type="button" aria-pressed="false">Cả site</button></span></div><div class="stats" hidden><div>Đạt<b id="countPass">0</b></div><div>Không đạt<b id="countFail">0</b></div><div>Cần xác nhận<b id="countWarn">0</b></div></div><details class="manual"><summary>Lọc / xuất sổ kiểm</summary><select id="historySite"><option value="">Tất cả site</option></select><button id="export" class="secondary" style="margin-top:8px">Xuất CSV</button></details><div id="history"></div><p class="hint"><span id="ledgerHint">Máy này giữ bản sao để dùng khi mất mạng.</span></p></section>
+<div class="hint" id="driveStatus" role="status"></div>
+<details class="card" id="driveSettings"><summary>Kết nối Google Drive</summary><div class="body"><p class="hint">Sổ kiểm sẽ lưu vào Google Sheet của anh. Cấu hình riêng cho mỗi thiết bị, không đưa mã kết nối lên GitHub.</p><label for="driveUrl">Web app URL (Apps Script)</label><input id="driveUrl" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec"><label for="driveToken" style="margin-top:12px">Mã kết nối</label><input id="driveToken" type="password" autocomplete="off" placeholder="MA_KET_NOI từ hàm setup"><div class="buttons"><button id="connectDrive" type="button">Kết nối</button><button id="retryDrive" type="button" class="secondary">Gửi lại lượt chờ</button><button id="refreshLedger" type="button" class="secondary">Tải lại sổ chung</button></div><div id="connectStatus" class="hint" role="status"></div><p class="hint">Lượt kiểm cũ trên máy cũng được gửi khi kết nối. Cả site hiển thị tối đa 300 lượt mới nhất của site đang chọn.</p></div></details>
+<details class="card"><summary>Master và cập nhật dữ liệu <span class="badge" id="masterCount"></span></summary><div class="body"><div id="masterInfo" class="hint"></div><div class="buttons"><label class="filebtn">Nạp master XLSX / CSV / JSON<input id="import" type="file" accept=".xlsx,.csv,.json" hidden></label><button id="downloadMaster" class="secondary">Xuất master JSON</button><button id="audit" class="secondary">Xuất danh sách cần rà</button></div><p class="hint">Giữ cột: ma_pkg, cap, gtin, item_tp, ten_sp, site, trang_thai, ly_do. Mã barcode giữ dạng Text. Chỉ dòng DA_DUYET, site rõ ràng và GTIN hợp lệ mới dùng để kết luận Đạt. Mã TP nhận barcode đơn vị hoặc thùng đã duyệt; kiểm QR áp dụng khi chọn Có. Mã PKG tự lấy cấp từ master. Không tự suy diễn site từ site_goc.</p><p class="hint">QR hiện kiểm theo định dạng i.tcx.com.vn/ + 13 số GTIN + 11 ký tự sê-ri hex. Kiểm trùng QR chỉ trong lịch sử đã lưu trên máy này; không xác thực QR với nhà phát hành.</p></div></details>
+<footer>QA QR Label Check v3.0 · Scanner: html5-qrcode 2.3.8 (Apache-2.0)<br>Camera cần HTTPS hoặc localhost. Thư viện quét và nhập XLSX tải khi cần.</footer></main>
+<div class="cam" id="cam" role="dialog" aria-modal="true" aria-labelledby="camTtl">
+  <div class="ttl" id="camTtl">Quét</div>
+  <div class="sub" id="camSub"></div>
+  <div class="chips" id="camChips"></div>
+  <div id="reader"></div>
+  <div id="khoanh" class="hidden"><canvas id="kcv"></canvas></div>
+  <div class="camMsg" id="camMsg" role="status"></div>
+  <div class="camTools hidden" id="camTools">
+    <button class="btn ghost" id="camTorch" type="button" aria-pressed="false">Đèn</button>
+    <button class="btn ghost" id="camZoom" type="button" aria-pressed="false">Phóng 2x</button>
+  </div>
+  <div class="camBtns" id="camLive">
+    <button class="btn" id="camSnap" type="button">Chụp và khoanh</button>
+    <button class="btn ghost" id="camFileBtn" type="button">Ảnh camera máy</button>
+  </div>
+  <div class="camBtns hidden" id="camCrop">
+    <button class="btn" id="camRead" type="button">Đọc vùng này</button>
+    <button class="btn ghost" id="camRetake" type="button">Quét lại</button>
+  </div>
+  <button class="btn wide ghost" id="camClose" type="button">Huỷ</button>
+  <input type="file" id="camFile" accept="image/*" capture="environment" hidden="">
+  <div id="reader2" aria-hidden="true"></div>
+</div>
+
+
 <script id="embedded-master" type="application/json">{
   "source": "MASTER_BARCODE.xlsx / sheet in",
   "loaded_at": "08/10/2026",
@@ -9698,7 +9753,7 @@ function resolve(rows,{mode,code,site,cap}){
  if(!all.length)return {ok:false,reason:'Mã chưa có trong master.'};
  const here=all.filter(r=>r.site===site);
  if(!here.length)return {ok:false,reason:'Mã chưa có master tại site này; cần xác nhận site trong master.'};
- const level=here.filter(r=>r.cap===cap);
+ const level=here.filter(r=>cap==='ANY'?['DON_VI','THUNG'].includes(r.cap):r.cap===cap);
  if(!level.length)return {ok:false,reason:'Chưa có master cho cấp bao bì đã chọn.'};
  const valid=level.filter(usable);
  if(!valid.length)return {ok:false,reason:'Master chưa duyệt hoặc barcode không hợp lệ. '+[...new Set(level.map(r=>r.ly_do).filter(Boolean))].join(' ')};
@@ -9720,7 +9775,7 @@ function evaluate(rows,c,history=[]){
  if(!master.gtins.includes(canonical(c.barcode)))return out('fail','Barcode trên bao bì không thuộc master đã duyệt của mã/site/cấp này.',{qr,expected:master.gtins});
  }
  if(qr&&history.some(h=>h.serial===qr.serial&&canonical(h.qr_gtin)===canonical(qr.gtin)))return out('warn','Sê-ri QR này đã có trong sổ trên máy. Xác nhận quét lại cùng nhãn hay có nhãn in trùng.',{qr});
- const scope=c.mode==='NONE'?'QR–barcode':`${c.mode}–${needsQR?'QR–':''}barcode (${c.cap==='THUNG'?'thùng':'đơn vị'})`;
+ const scope=c.mode==='NONE'?'QR–barcode':`${c.mode}–${needsQR?'QR–':''}barcode (${c.cap==='THUNG'?'thùng':c.cap==='ANY'?'đơn vị/thùng':'đơn vị'})`;
  return out('pass',c.mode==='NONE'?'QR và barcode khớp nhau. Phạm vi này không đối chiếu master.':'Barcode khớp master đã duyệt'+(needsQR?' và QR.':'.'),{qr,scope,name:master?.name});
 }
 function audit(rows){const issues=[];const add=(r,reason)=>issues.push({source_row:r.source_row,ma_pkg:r.ma_pkg,item_tp:r.item_tp,site:r.site,gtin:r.gtin,trang_thai:r.trang_thai,reason});for(const r of rows){if(!r.site)add(r,'Thiếu site');if(!gtinValid(r.gtin))add(r,'Barcode trống hoặc sai số kiểm tra');if(r.trang_thai!=='DA_DUYET')add(r,r.trang_thai==='CHO_DUYET'?'Chờ duyệt':'Thiếu trạng thái duyệt');if(!['DON_VI','THUNG'].includes(r.cap))add(r,'Cấp bao bì chưa chuẩn hóa');}const groups=new Map();rows.filter(usable).forEach(r=>{const key=[r.site,r.cap,r.ma_pkg].join('|');if(r.ma_pkg){if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}});for(const group of groups.values())if(new Set(group.map(r=>canonical(r.gtin))).size>1)group.forEach(r=>add(r,'PKG có nhiều barcode đã duyệt'));return issues;}
@@ -9728,37 +9783,419 @@ function parseCSV(s){s=s.replace(/^\uFEFF/,'');const first=s.split(/\r?\n/)[0],s
 function csv(rows,headers){const cell=x=>{let s=text(x);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};return '\uFEFF'+[headers.map(cell).join(','),...rows.map(r=>headers.map(h=>cell(r[h])).join(','))].join('\r\n');}
 const api={text,canonical,gtinValid,normalize,parseQR,usable,resolve,evaluate,audit,parseCSV,csv};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.QRLogic=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
+</script><script>const NEED_SAME_READS=2;
+function feedback(t){try{navigator.vibrate?.(t==='pass'?60:[100,70,100]);}catch{}}
+const FMT = {
+  qr:     F => [F.QR_CODE],
+  thung:  F => [F.ITF, F.EAN_13, F.CODE_128],
+  any:    F => [F.EAN_13, F.EAN_8, F.UPC_A, F.ITF, F.CODE_128],
+  don_vi: F => [F.EAN_13, F.EAN_8, F.UPC_A]
+};
+const BD_FMT = { qr:['qr_code'], thung:['itf','ean_13','code_128'], any:['ean_13','ean_8','upc_a','itf','code_128'], don_vi:['ean_13','ean_8','upc_a'] };
+
+/* Live engine: own camera loop on full frames. Decoder is the phone's BarcodeDetector
+   when it supports the formats (Android Chrome), otherwise zxing-cpp compiled to
+   WebAssembly (barcode-detector ponyfill), the same engine family native scanners use.
+   One frame can give both the QR and the barcode. Falls back to html5-qrcode. */
+const Live = {
+  digitalZoom:1, stream:null, track:null, det:null, detKey:'',
+  supported(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia); },
+  async detector(formats){
+    const key = formats.join(',');
+    if(this.det && this.detKey === key) return this.det;
+    let D = null;
+    if('BarcodeDetector' in window){
+      try{ const sup = await window.BarcodeDetector.getSupportedFormats(); if(formats.every(f => sup.includes(f))) D = window.BarcodeDetector; }catch(e){}
+    }
+    if(!D && window.BarcodeDetectionAPI) D = window.BarcodeDetectionAPI.BarcodeDetector;
+    if(!D) return null;
+    try{ this.det = new D({formats}); this.detKey = key; return this.det; }catch(e){ return null; }
+  },
+  async start(video){
+    this.stream = await navigator.mediaDevices.getUserMedia({audio:false,
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}});
+    this.track = this.stream.getVideoTracks()[0];
+    try{ await this.track.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){}
+    video.setAttribute('playsinline', ''); video.muted = true; video.srcObject = this.stream;
+    await video.play();
+  },
+  frame(video, c){
+    if(!video || video.readyState < 2 || !video.videoWidth) return null;
+    const sc = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight));
+    c.width = Math.round(video.videoWidth * sc); c.height = Math.round(video.videoHeight * sc);
+    const z=this.digitalZoom||1,w=video.videoWidth/z,h=video.videoHeight/z;c.getContext('2d', {willReadFrequently:true}).drawImage(video,(video.videoWidth-w)/2,(video.videoHeight-h)/2,w,h,0,0,c.width,c.height);
+    return c;
+  },
+  caps(){ try{ return this.track && this.track.getCapabilities ? this.track.getCapabilities() : {}; }catch(e){ return {}; } },
+  async set(k, v){ try{ await this.track.applyConstraints({advanced:[{[k]:v}]}); return true; }catch(e){ return false; } },
+  stop(){ this.digitalZoom=1; if(this.stream) this.stream.getTracks().forEach(t => t.stop()); this.stream = null; this.track = null; }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* Camera sheet. A session collects what the check still needs (QR, barcode or both)
+   from the same camera view. Ways in: live loop (src 'quet'), freeze and decode the
+   whole frame (src 'anh'), or a box drawn by the user (src 'khoanh'). */
+const Scan = {
+  inst:null, kind:null, res:null, rej:null, img:null, box:null, need:null, got:null, live:false, video:null, tail:null,
+  lib(){ const L = window.__Html5QrcodeLibrary__ || window; return L && L.Html5Qrcode ? L : null; },
+  session(need){
+    if(this.rej) this.cancel();
+    this.need = need; this.got = {qr:null, bar:null};
+    this.kind = need.primary === 'qr' ? 'qr' : need.barKind;
+    $('camTtl').textContent = need.qr && need.bar ? 'Quét QR và barcode' : need.qr ? 'Quét QR' : 'Quét barcode';
+    $('cam').classList.add('open');document.body.style.overflow='hidden';$('camTorch').setAttribute('aria-pressed','false');$('camZoom').setAttribute('aria-pressed','false');
+    return new Promise((res, rej) => { this.res = res; this.rej = rej; this.startLive(); });
+  },
+  chips(){
+    const n = this.need || {}, g = this.got || {};
+    const chip = (on, ok, t) => on ? `<span class="chip${ok ? ' ok' : ''}">${t}${ok ? ' ✓' : ''}</span>` : '';
+    $('camChips').innerHTML = chip(n.qr, g.qr, 'QR') + chip(n.bar, g.bar, 'Barcode');
+  },
+  liveUI(){
+    $('reader').classList.remove('hidden'); $('khoanh').classList.add('hidden');
+    $('camLive').classList.remove('hidden'); $('camCrop').classList.add('hidden');
+    $('camSub').textContent = 'Đưa nhãn vào khung, không cần căn đúng chiều. Mã nhỏ hoặc nhoè thì bấm Chụp và khoanh.';
+    this.msg(''); this.chips();
+  },
+  msg(t){ $('camMsg').textContent = t || ''; },
+  formats(){ return [...(this.need.qr ? ['qr_code'] : []), ...(this.need.bar ? BD_FMT[this.need.barKind] : [])]; },
+  async startLive(){
+    this.liveUI();
+    $('camTools').classList.add('hidden');
+    const det = Live.supported() ? await Live.detector(this.formats()) : null;
+    if(!det) return this.startLiveH5();
+    $('reader').innerHTML = '<video id="liveVideo" playsinline muted></video><div class="guide"></div>';
+    const video = $('liveVideo'); this.video = video;
+    try{ await Live.start(video); }
+    catch(e){ Live.stop(); return this.fail(new Error('Không mở được camera. Cho phép camera cho trang này trong cài đặt trình duyệt rồi thử lại.')); }
+    if(this.video !== video) return Live.stop();      // closed while the camera was opening
+    const caps = Live.caps();
+    $('camTorch').classList.remove('hidden');$('camTorch').disabled=!caps.torch;$('camTorch').title=caps.torch?'':'Thiết bị hoặc trình duyệt không hỗ trợ đèn';
+    $('camZoom').classList.remove('hidden');
+    $('camTools').classList.remove('hidden');
+    this.live = true;
+    this.loop(video, det);
+  },
+  async loop(video, det){
+    const c = document.createElement('canvas');
+    let last = null, n = 0;
+    while(this.live && this.video === video){
+      const t0 = Date.now();
+      const f = Live.frame(video, c);
+      if(f){
+        let codes = [];
+        try{ codes = await det.detect(f); }catch(e){}
+        if(!this.live || this.video !== video) break;
+        for(const code of codes){
+          if(code.format === 'qr_code'){ if(this.need.qr && !this.got.qr) this.take('qr', code.rawValue, 'qr_code', 'quet'); }
+          else if(this.need.bar && !this.got.bar){
+            // 1D: same value twice in a row before accepting
+            if(code.rawValue === last) n++; else { last = code.rawValue; n = 1; }
+            if(n >= NEED_SAME_READS) this.take('bar', code.rawValue, code.format, 'quet');
+          }
+        }
+      }
+      await sleep(Math.max(15, 70 - (Date.now() - t0)));
+    }
+  },
+  /* fallback: html5-qrcode, one kind at a time */
+  async startLiveH5(){
+    const L = this.lib();
+    if(!L) return this.fail(new Error('Không tải được bộ quét. Kiểm tra mạng rồi tải lại trang.'));
+    const kind = this.kind, which = kind === 'qr' ? 'qr' : 'bar';
+    $('reader').innerHTML = '';
+    this.inst = new L.Html5Qrcode('reader', {formatsToSupport:FMT[kind](L.Html5QrcodeSupportedFormats), verbose:false, experimentalFeatures:{useBarCodeDetectorIfSupported:true}});
+    const box = kind === 'qr'
+      ? (w, h) => { const s = Math.floor(Math.min(w, h) * 0.75); return {width:s, height:s}; }
+      : (w, h) => { const s = Math.floor(Math.min(w, h) * 0.85); return {width:s, height:s}; };   // square: barcode may be vertical
+    let last = null, n = 0;
+    const onOk = (text, res) => {
+      if(!this.res || this.kind !== kind) return;
+      if(text === last) n++; else { last = text; n = 1; }
+      if(n >= NEED_SAME_READS){ let fmt = ''; try{ fmt = res.result.format.formatName; }catch(e){} this.take(which, text, fmt, 'quet', true); }
+    };
+    const cfg = {fps:12, qrbox:box};
+    const inst = this.inst;
+    try{
+      await inst.start({facingMode:'environment'}, Object.assign({videoConstraints:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}}, cfg), onOk, () => {});
+    }catch(e){
+      try{ await inst.start({facingMode:'environment'}, cfg, onOk, () => {}); }
+      catch(e2){ if(this.inst === inst) this.fail(new Error('Không mở được camera. Cho phép camera cho trang này trong cài đặt trình duyệt rồi thử lại.')); }
+    }
+    if(this.inst!==inst){try{if(inst.isScanning)await inst.stop();inst.clear();}catch{}return;}
+    const v=document.querySelector('#reader video');
+    Live.track=v&&v.srcObject&&v.srcObject.getVideoTracks?v.srcObject.getVideoTracks()[0]:null;
+    const caps=Live.caps();$('camTorch').disabled=!caps.torch;$('camTorch').classList.remove('hidden');$('camZoom').classList.remove('hidden');$('camTools').classList.remove('hidden');
+  },
+  take(which, text, fmt, src, endNow){
+    if(!this.got || this.got[which]) return;
+    this.got[which] = {text, fmt, src};
+    this.chips(); feedback('pass');
+    const missing = (this.need.qr && !this.got.qr) || (this.need.bar && !this.got.bar);
+    if(!missing || endNow || src !== 'quet') return this.finish();
+    // got the main one: give the other code in view a moment, then stop
+    if(!this.tail) this.tail = setTimeout(() => this.finish(), 1500);
+  },
+  finish(){ const r = this.res, g = this.got; this.res = this.rej = null; this.close(); if(r) r(g); },
+  done(text, fmt, src){ this.take(this.kind === 'qr' ? 'qr' : 'bar', text, fmt, src, true); },
+  fail(err){ const j = this.rej; this.res = this.rej = null; this.close(); if(j) j(err); },
+  cancel(){
+    const g = this.got;
+    if(g && (g.qr || g.bar)) return this.finish();     // keep what was already read
+    this.fail(new Error('huy'));
+  },
+  async close(){
+    $('cam').classList.remove('open');document.body.style.overflow='';this.img = null;
+    if(this.tail){ clearTimeout(this.tail); this.tail = null; }
+    await this.stopLive();
+  },
+  async stopLive(){
+    this.live = false; this.video = null; Live.stop();
+    const i = this.inst; this.inst = null;
+    if(i){ try{ await i.stop(); }catch(e){} try{ i.clear(); }catch(e){} }
+  },
+  grabVideo(){
+    const v = document.querySelector('#reader video');
+    if(!v || !v.videoWidth) return null;
+    const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+    const z=Live.digitalZoom||1,w=v.videoWidth/z,h=v.videoHeight/z;c.getContext('2d').drawImage(v,(v.videoWidth-w)/2,(v.videoHeight-h)/2,w,h,0,0,c.width,c.height);return c;
+  },
+  async snap(){
+    const c = Cap.grab();
+    if(!c){ this.msg('Camera chưa sẵn sàng, đợi một giây rồi bấm lại.'); return; }
+    await this.stopLive();
+    await this.useImage(c);
+  },
+  async fromFile(file){
+    if(!file) return;
+    await this.stopLive();
+    this.msg('Đang mở ảnh...');
+    try{ await this.useImage(await Cap.load(file)); }
+    catch(e){ this.msg('Không mở được ảnh này. Chụp lại.'); this.startLive(); }
+  },
+  /* still image: the kind still missing (QR first), whole image, then the user's box */
+  stillKind(){ return (this.need.qr && !this.got.qr) ? 'qr' : this.need.barKind; },
+  async useImage(c){
+    this.img = c; this.kind = this.stillKind();
+    $('reader').classList.add('hidden'); $('camLive').classList.add('hidden'); $('camTools').classList.add('hidden');
+    $('khoanh').classList.remove('hidden'); $('camCrop').classList.remove('hidden');
+    $('camSub').textContent = `Kéo ngón tay khoanh sát ${this.kind === 'qr' ? 'mã QR' : 'barcode'} rồi bấm Đọc vùng này.`;
+    const sq = Math.min(c.width, c.height) * 0.5;
+    this.box = this.kind === 'qr'
+      ? {x:(c.width - sq) / 2 / c.width, y:(c.height - sq) / 2 / c.height, w:sq / c.width, h:sq / c.height}
+      : {x:0.1, y:0.3, w:0.8, h:0.4};
+    this.draw();
+    this.msg('Đang đọc cả ảnh...');
+    const t = await Cap.decode(c, this.kind, null);
+    if(t && this.img === c) return this.done(t.text, t.fmt, 'anh');
+    this.msg('Máy chưa tự đọc được cả ảnh. Khoanh sát mã rồi bấm Đọc vùng này.');
+  },
+  async readCrop(){
+    if(!this.img) return;
+    const c = this.img, b = this.box;
+    this.msg('Đang đọc vùng khoanh...');
+    const t = await Cap.decode(c, this.kind, {x:Math.round(b.x * c.width), y:Math.round(b.y * c.height), w:Math.max(8, Math.round(b.w * c.width)), h:Math.max(8, Math.round(b.h * c.height))});
+    if(t && this.img === c) return this.done(t.text, t.fmt, 'khoanh');
+    this.msg('Chưa đọc được. Khoanh sát mã hơn, hoặc bấm Quét lại và đưa máy lại gần, hoặc dùng Ảnh camera máy.');
+  },
+  retake(){ this.img = null; this.kind = this.need.primary === 'qr' ? 'qr' : this.need.barKind; this.startLive(); },
+  draw(){
+    const cv = $('kcv'), img = this.img; if(!cv || !img) return;
+    const g = cv.getContext && cv.getContext('2d'); if(!g) return;
+    const wrap = $('khoanh');
+    const scale = Math.min((wrap.clientWidth || 360) / img.width, (wrap.clientHeight || 420) / img.height);
+    cv.width = Math.max(1, Math.round(img.width * scale)); cv.height = Math.max(1, Math.round(img.height * scale));
+    g.drawImage(img, 0, 0, cv.width, cv.height);
+    const b = this.box, x = b.x * cv.width, y = b.y * cv.height, w = b.w * cv.width, h = b.h * cv.height;
+    g.fillStyle = 'rgba(0,0,0,.5)';
+    g.fillRect(0, 0, cv.width, y); g.fillRect(0, y + h, cv.width, cv.height - y - h);
+    g.fillRect(0, y, x, h); g.fillRect(x + w, y, cv.width - x - w, h);
+    g.strokeStyle = '#4ADE9B'; g.lineWidth = 3; g.strokeRect(x, y, w, h);
+  },
+  bindCrop(){
+    const cv = $('kcv'); let from = null;
+    const pt = e => { const r = cv.getBoundingClientRect(); return {x:Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y:Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))}; };
+    cv.addEventListener('pointerdown', e => { if(!this.img) return; e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(x){} from = pt(e); this.box = {x:from.x, y:from.y, w:0, h:0}; this.draw(); });
+    cv.addEventListener('pointermove', e => { if(!from) return; e.preventDefault(); const p = pt(e);
+      this.box = {x:Math.min(from.x, p.x), y:Math.min(from.y, p.y), w:Math.abs(p.x - from.x), h:Math.abs(p.y - from.y)}; this.draw(); });
+    const end = () => { if(!from) return; from = null;
+      // a slip of the finger is not a box: keep a usable default instead of an empty crop
+      if(this.box.w < 0.04 || this.box.h < 0.03) this.box = {x:0.25, y:0.3, w:0.5, h:0.4};
+      this.draw(); };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    window.addEventListener('resize', () => this.draw());
+  }
+};
+
+/* Still-image decoding. Order: BarcodeDetector (native or zxing-cpp), then jsQR (QR only)
+   at several scales, then jsQR on a sharpened copy, then ZXing (html5-qrcode) at
+   small scales, where it does best. Crop and rescale paths are preserved from the user-supplied reference. */
+const Cap = {
+  grab(){ return Scan.grabVideo(); },
+  async load(file){
+    const url = URL.createObjectURL(file);
+    try{
+      const img = new Image(); img.src = url; await img.decode();
+      const sc = Math.min(1, 3000 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return c;
+    }finally{ URL.revokeObjectURL(url); }
+  },
+  region(src, r, target){
+    const big = Math.max(r.w, r.h);
+    const sc = target ? Math.min(4, target / big) : Math.min(1, 2000 / big);
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(r.w * sc)); c.height = Math.max(1, Math.round(r.h * sc));
+    const g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height); return c;
+  },
+  sharpen(c, k){
+    const g = c.getContext('2d'), w = c.width, h = c.height, d = g.getImageData(0, 0, w, h).data;
+    const s = new Float32Array(w * h); let lo = 255, hi = 0;
+    for(let i = 0; i < w * h; i++){ const v = 0.299 * d[4*i] + 0.587 * d[4*i+1] + 0.114 * d[4*i+2]; s[i] = v; if(v < lo) lo = v; if(v > hi) hi = v; }
+    const o = g.createImageData(w, h), span = Math.max(1, hi - lo);
+    for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
+      const i = y * w + x, l = s[y*w + Math.max(0, x-1)], r = s[y*w + Math.min(w-1, x+1)], u = s[Math.max(0, y-1)*w + x], dn = s[Math.min(h-1, y+1)*w + x];
+      let v = (s[i] * (1 + 4*k) - k * (l + r + u + dn) - lo) * 255 / span; v = v < 0 ? 0 : v > 255 ? 255 : v;
+      o.data[4*i] = o.data[4*i+1] = o.data[4*i+2] = v; o.data[4*i+3] = 255;
+    }
+    const c2 = document.createElement('canvas'); c2.width = w; c2.height = h; c2.getContext('2d').putImageData(o, 0, 0); return c2;
+  },
+  jsqr(c){
+    if(!window.jsQR) return null;
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+    const r = window.jsQR(d.data, c.width, c.height, {inversionAttempts:'attemptBoth'});
+    return r && r.data ? {text:r.data, fmt:'QR_CODE'} : null;
+  },
+  async zx(c, kind){
+    const L = Scan.lib(); if(!L) return null;
+    const blob = await new Promise(r => c.toBlob(r, 'image/png')); if(!blob) return null;
+    const q = new L.Html5Qrcode('reader2', {formatsToSupport:FMT[kind](L.Html5QrcodeSupportedFormats), verbose:false});
+    try{ const t = await q.scanFile(new File([blob], 'k.png', {type:'image/png'}), false); return t ? {text:t, fmt:''} : null; }
+    catch(e){ return null; } finally{ try{ q.clear(); }catch(e){} }
+  },
+  async decode(src, kind, rect){
+    const r = rect || {x:0, y:0, w:src.width, h:src.height};
+    const isQr = kind === 'qr';
+    const det = await Live.detector(BD_FMT[kind]);
+    if(det){
+      try{
+        const f = await det.detect(this.region(src, r, 0));
+        if(f && f.length) return {text:f[0].rawValue, fmt:f[0].format};
+      }catch(e){}
+    }
+    const scales = rect ? [0, 400, 600, 300] : [0];
+    if(isQr){
+      for(const t of scales){ const v = this.jsqr(this.region(src, r, t)); if(v) return v; }
+      for(const t of scales) for(const k of [0.6, 1.2]){ const v = this.jsqr(this.sharpen(this.region(src, r, t), k)); if(v) return v; }
+    }
+    const zs = isQr ? (rect ? [250, 350, 500] : []) : (rect ? [400, 600, 900] : [1200]);
+    for(const t of zs){ const v = await this.zx(this.region(src, r, t), kind); if(v) return v; }
+    if(!isQr) for(const t of zs){ const v = await this.zx(this.sharpen(this.region(src, r, t), 0.8), kind); if(v) return v; }
+    return null;
+  }
+};
+
+</script><script>/* Durable local outbox. Only server-confirmed IDs leave the queue. */
+(function(root){
+'use strict';
+const EXPECTED_SHEET='1n7aHerzcNbRGMK42tOMAms7XYxGTaSXGsNc8MfY6CEc';
+class QRSync{
+ constructor({read,write,request,onChange=()=>{},now=()=>Date.now()}){this.read=read;this.write=write;this.request=request;this.onChange=onChange;this.now=now;this.busy=false;this.nextRetry=0;this.failures=0;this.error='';}
+ config(){return this.read('drive_config',{});}
+ configured(){const c=this.config();return /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(c.url||'')&&/^[a-f0-9]{64}$/.test(c.token||'');}
+ pending(){return this.read('drive_queue',[]);}
+ acknowledged(){return this.read('drive_sent',{});}
+ state(){return {configured:this.configured(),busy:this.busy,pending:this.pending().length,sent:Object.keys(this.acknowledged()).length,error:this.error};}
+ signal(){this.onChange(this.state());}
+ enqueue(records){const sent=this.acknowledged(),queue=this.pending(),ids=new Set(queue.map(r=>r.id));let changed=false;for(const r of Array.isArray(records)?records:[records]){if(r&&r.id&&!sent[r.id]&&!ids.has(r.id)){queue.push(r);ids.add(r.id);changed=true;}}if(changed&&!this.write('drive_queue',queue)){this.error='Không lưu được hàng chờ. Giữ trang mở và xuất CSV.';this.signal();return false;}this.signal();return true;}
+ async connect(url,token){const config={url:String(url||'').trim(),token:String(token||'').trim()};if(!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.url))throw Error('Dán Web app URL kết thúc /exec, không dùng link Google Sheet.');if(!/^[a-f0-9]{64}$/.test(config.token))throw Error('Dán đúng MA_KET_NOI gồm 64 ký tự trong nhật ký chạy setup.');const response=await this.request(config,{act:'ping'});if(response.sheet_id!==EXPECTED_SHEET)throw Error('Apps Script đang trỏ tới Google Sheet khác.');if(!this.write('drive_config',config))throw Error('Không lưu được cấu hình kết nối trên máy.');this.error='';this.nextRetry=0;this.failures=0;this.signal();return true;}
+ async list(site){if(!this.configured())throw Error('Kết nối Google Drive trước khi xem Cả site.');const response=await this.request(this.config(),{act:'list',site,n:300});if(response.sheet_id!==EXPECTED_SHEET||!Array.isArray(response.rows))throw Error('Sổ chung trả dữ liệu không đúng định dạng.');return response.rows;}
+ async flush(force=false){
+  if(this.busy||!this.configured()||(!force&&this.now()<this.nextRetry))return false;
+  const queue=this.pending();if(!queue.length){this.error='';this.signal();return true;}
+  const snapshot=queue.slice(0,50),config=this.config();this.busy=true;this.signal();
+  try{
+   const response=await this.request(config,{act:'append',rows:snapshot});
+   if(response.sheet_id!==EXPECTED_SHEET||!Array.isArray(response.accepted))throw Error('Máy chủ chưa xác nhận các lượt kiểm.');
+   if(JSON.stringify(this.config())!==JSON.stringify(config))throw Error('Kết nối đã thay đổi trong khi gửi. Các lượt kiểm giữ lại để gửi đúng sổ.');
+   const wanted=new Set(snapshot.map(r=>r.id)),accepted=new Set(response.accepted.filter(id=>wanted.has(id)));
+   if(!accepted.size)throw Error('Máy chủ chưa xác nhận lượt kiểm nào.');
+   const ack=this.acknowledged();accepted.forEach(id=>ack[id]=new Date(this.now()).toISOString());
+   // Persist acknowledgment before deleting outbox; retries remain safe on quota/storage failure.
+   if(!this.write('drive_sent',ack))throw Error('Đã gửi nhưng chưa lưu được xác nhận trên máy. Sẽ gửi lại cùng ID.');
+   if(!this.write('drive_queue',this.pending().filter(r=>!accepted.has(r.id))))throw Error('Chưa cập nhật được hàng chờ trên máy.');
+   this.error='';this.failures=0;this.nextRetry=0;return true;
+  }catch(e){this.error=e.message||String(e);this.failures++;this.nextRetry=this.now()+Math.min(300000,15000*2**Math.min(5,this.failures-1));return false;}
+  finally{this.busy=false;this.signal();}
+ }
+}
+if(typeof module!=='undefined'&&module.exports)module.exports=QRSync;else root.QRSync=QRSync;
+})(typeof globalThis!=='undefined'?globalThis:this);
 </script><script>'use strict';
 const L=QRLogic,$=id=>document.getElementById(id),KEY='qa_qr_v1_',esc=v=>L.text(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+k))??d;}catch{return d;}};
 function put(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v));return true;}catch{$('message').textContent='Không lưu được dữ liệu vào trình duyệt. Xuất CSV trước khi đóng trang.';return false;}}
 const original=JSON.parse($('embedded-master').textContent);
 let master=L.normalize(read('master',original.rows)),meta=read('meta',{name:original.source,at:original.loaded_at}),history=read('history',[]),selected='',result=null,scan=null,scanKind='',scanEpoch=0,frame=0,stream=null;
+let ledgerMode='local',sharedRows=[],sharedSite='',sharedLoading=false,sharedError='';
 function context(){return {mode:$('mode').value,site:$('site').value,person:$('person').value.trim(),cap:$('cap').value,code:selected,useQR:$('useQR').checked,qr:$('qr').value.trim(),barcode:$('barcode').value.trim()};}
 const requiresQR=()=>context().mode==='NONE'||(context().useQR&&context().cap!=='THUNG');
-function invalidate(){result=null;$('verdict').hidden=true;$('after').hidden=true;$('save').disabled=false;}
-function resetScans(){ $('qr').value='';$('barcode').value='';invalidate();}
+function invalidate(){result=null;$('verdict').hidden=true;$('after').hidden=true;$('save').disabled=false;updateSteps();}
+function resetScans(){ $('qr').value='';$('barcode').value='';$('qrRead').textContent='';$('barRead').textContent='';invalidate();}
 function fillSites(){const previous=$('site').value||read('prefs',{}).site||'';const sites=[...new Set(master.map(r=>r.site).filter(Boolean))].sort();$('site').innerHTML='<option value="">Chọn site</option>'+sites.map(s=>`<option>${esc(s)}</option>`).join('');if(sites.includes(previous))$('site').value=previous;$('historySite').innerHTML='<option value="">Tất cả site</option>'+[...new Set([...sites,...history.map(r=>r.site)])].sort().map(s=>`<option>${esc(s)}</option>`).join('');}
 function remember(){put('prefs',{site:$('site').value,person:$('person').value,mode:$('mode').value,cap:$('cap').value,useQR:$('useQR').checked});}
-function controls(clear=true){if(clear){selected='';$('search').value='';$('chosen').textContent='';resetScans();}const c=context(),qr=requiresQR();$('product').hidden=c.mode==='NONE';$('level').hidden=c.mode==='NONE';$('useQR').disabled=c.mode==='NONE'||c.cap==='THUNG';$('qrCard').hidden=!qr;$('qrNumber').textContent=c.mode==='NONE'?'1':'2';$('barNumber').textContent=c.mode==='NONE'?'2':qr?'3':'2';$('productTitle').textContent=c.mode==='TP'?'Chọn thành phẩm đang chạy':'Chọn mã bao bì đang chạy';$('modeHint').textContent=c.mode==='NONE'?'Phạm vi: QR–barcode, không đối chiếu master.':c.cap==='THUNG'?`Phạm vi: ${c.mode}–barcode thùng, không kiểm QR đơn vị.`:`Phạm vi: ${c.mode}–${qr?'QR–':''}barcode đơn vị.`;renderHits();remember();}
-function renderHits(){const c=context(),q=$('search').value.trim().toLowerCase(),field=c.mode==='PKG'?'ma_pkg':'item_tp';if(selected){$('hits').innerHTML='';return;}if(!c.site){$('hits').innerHTML='<p class="hint">Chọn site để tìm sản phẩm.</p>';return;}if(q.length<2){$('hits').innerHTML='<p class="hint">Gõ ít nhất 2 ký tự để tìm trong master của site đã chọn.</p>';return;}const groups=new Map();master.filter(r=>r.site===c.site&&r.cap===c.cap&&r[field]&&[r.ma_pkg,r.item_tp,r.ten_sp,r.gtin].join(' ').toLowerCase().includes(q)).forEach(r=>{if(!groups.has(r[field]))groups.set(r[field],r);});const hits=[...groups.entries()].slice(0,40);$('hits').innerHTML=hits.map(([code,r])=>{const m=L.resolve(master,{...c,code});return `<button type="button" data-code="${esc(code)}"><b>${esc(code)} · ${m.ok?'Đã duyệt':'Cần rà master'}</b>${esc(r.ten_sp||'Chưa có tên sản phẩm')}</button>`;}).join('')||'<p class="hint">Không tìm thấy. Kiểm tra site/cấp hoặc nhập đúng mã và bấm Enter để kiểm.</p>';}
-function choose(code){selected=code.trim().toUpperCase();$('search').value=selected;resetScans();renderHits();const m=L.resolve(master,context());$('chosen').innerHTML=m.ok?`<b>${esc(m.name||selected)}</b><div class="hint">Barcode đã duyệt: ${m.rows.map(r=>r.gtin).filter((v,i,a)=>a.indexOf(v)===i).map(esc).join(' / ')}</div>`:`<div class="warn-text">${esc(m.reason)}</div>`;}
+function controls(clear=true){if(clear){selected='';$('search').value='';$('chosen').textContent='';resetScans();}const c=context(),qr=requiresQR();$('product').hidden=c.mode==='NONE';$('level').hidden=true;$('useQR').disabled=c.mode==='NONE'||c.cap==='THUNG';$('qrCard').hidden=!qr;$('qrNumber').textContent=c.mode==='NONE'?'1':'2';$('barNumber').textContent=c.mode==='NONE'?'2':qr?'3':'2';$('productTitle').textContent=c.mode==='TP'?'Chọn thành phẩm đang chạy':'Chọn mã bao bì đang chạy';$('modeHint').textContent='Phạm vi: '+(c.mode==='NONE'?'QR–barcode':`${c.mode}–${qr?'QR–':''}barcode`);$('search').placeholder=c.mode==='TP'?'Gõ mã TP, tên hoặc barcode':'Gõ mã PKG, mã TP, tên hoặc barcode';document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===c.mode)));document.querySelectorAll('[data-qr]').forEach(b=>{b.setAttribute('aria-pressed',String((b.dataset.qr==='1')===c.useQR));b.disabled=c.mode==='NONE'&&b.dataset.qr==='0';});renderHits();remember();updateSteps();}
+function renderHits(){const c=context(),q=$('search').value.trim().toLowerCase(),field=c.mode==='PKG'?'ma_pkg':'item_tp';if(selected){$('hits').innerHTML='';return;}if(!c.site){$('hits').innerHTML='<p class="hint">Chọn site để tìm sản phẩm.</p>';return;}if(q.length<2){$('hits').innerHTML='<p class="hint">Gõ ít nhất 2 ký tự để tìm trong master của site đã chọn.</p>';return;}const groups=new Map();master.filter(r=>r.site===c.site&&r[field]&&[r.ma_pkg,r.item_tp,r.ten_sp,r.gtin].join(' ').toLowerCase().includes(q)).forEach(r=>{if(!groups.has(r[field]))groups.set(r[field],r);});const hits=[...groups.entries()].slice(0,40);$('hits').innerHTML=hits.map(([code,r])=>{const m=L.resolve(master,{...c,code,cap:c.mode==='TP'?'ANY':r.cap});return `<button type="button" data-code="${esc(code)}"><b>${esc(code)} · ${m.ok?'Đã duyệt':'Cần rà master'}</b>${esc(r.ten_sp||'Chưa có tên sản phẩm')}</button>`;}).join('')||'<p class="hint">Không tìm thấy. Kiểm tra site/cấp hoặc nhập đúng mã và bấm Enter để kiểm.</p>';}
+function choose(code){if(!ready())return;selected=code.trim().toUpperCase();if($('mode').value==='TP')$('cap').value='ANY';else{const caps=[...new Set(master.filter(r=>r.ma_pkg===selected&&r.site===$('site').value).map(r=>r.cap))];$('cap').value=caps.length===1&&caps[0]==='THUNG'?'THUNG':'DON_VI';}$('search').value=selected;resetScans();renderHits();const m=L.resolve(master,context());$('chosen').innerHTML=m.ok?`<b>${esc(m.name||selected)}</b><div class="hint">Barcode đã duyệt: ${m.rows.map(r=>r.gtin).filter((v,i,a)=>a.indexOf(v)===i).map(v=>esc(v)+(m.rows.find(r=>r.gtin===v)?.cap==='THUNG'?' (thùng)':'')).join(' / ')}</div>`:`<div class="warn-text">${esc(m.reason)}</div>`;controls(false);}
 function check(){result=L.evaluate(master,context(),history);const names={pass:'ĐẠT',fail:'KHÔNG ĐẠT',warn:'CẦN XÁC NHẬN'};$('verdict').className=result.status;$('verdict').hidden=false;$('status').textContent=names[result.status];$('reason').textContent=result.reason;$('scope').textContent='Phạm vi: '+(result.scope||$('modeHint').textContent.replace('Phạm vi: ',''));$('after').hidden=false;$('save').disabled=false;if(navigator.vibrate)navigator.vibrate(result.status==='pass'?60:[100,70,100]);}
 function download(name,contents,type){const url=URL.createObjectURL(new Blob([contents],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function renderHistory(){const filter=$('historySite').value,rows=history.filter(r=>!filter||r.site===filter);for(const [id,status] of [['countPass','pass'],['countFail','fail'],['countWarn','warn']])$(id).textContent=rows.filter(r=>r.status===status).length;$('history').innerHTML=rows.slice(0,15).map(r=>`<div class="ledger"><b class="${r.status}-text">${esc(r.ket_luan)} · ${esc(r.code||'QR–barcode')} · ${esc(r.barcode)}</b>${esc(r.at)} · ${esc(r.site)} · ${esc(r.person)}<br>${esc(r.reason)}</div>`).join('')||'<p class="hint">Chưa có lượt kiểm đã lưu.</p>';}
-function save(){if(!result)return;const c=context();if(!c.site||!c.person||!L.gtinValid(c.barcode)){ $('message').textContent='Cần site, tên người kiểm và barcode hợp lệ để ghi sổ.';return;}const qr=result.qr,record={id:globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random(),at:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'}),...c,qr_gtin:qr?.gtin||'',serial:qr?.serial||'',status:result.status,ket_luan:{pass:'ĐẠT',fail:'KHÔNG ĐẠT',warn:'CẦN XÁC NHẬN'}[result.status],reason:result.reason,scope:result.scope||$('modeHint').textContent,master_source:meta.name,master_at:meta.at};const next=[record,...history];if(put('history',next)){history=next;renderHistory();$('save').disabled=true;$('message').textContent='Đã lưu lượt kiểm trên máy này.';}}
+function ledgerRows(){const source=ledgerMode==='site'?sharedRows:history;const filter=$('historySite').value;return source.filter(r=>!filter||r.site===filter);}
+function renderHistory(){const rows=ledgerRows();$('localLedger').setAttribute('aria-pressed',String(ledgerMode==='local'));$('allSite').setAttribute('aria-pressed',String(ledgerMode==='site'));$('ledgerHint').textContent=ledgerMode==='site'?'Sổ chung trên Google Drive · site '+($('site').value||'chưa chọn')+' · tối đa 300 lượt mới nhất.':'Máy này giữ bản sao để dùng khi mất mạng.';for(const [id,status] of [['countPass','pass'],['countFail','fail'],['countWarn','warn']])$(id).textContent=rows.filter(r=>r.status===status).length;$('history').innerHTML=rows.slice(0,ledgerMode==='site'?300:15).map(r=>`<div class="ledger"><b class="${r.status}-text">${esc(r.ket_luan)} · ${esc(r.code||'QR–barcode')} · ${esc(r.barcode)}</b>${esc(r.at)} · ${esc(r.site)} · ${esc(r.person)}<br>${esc(r.reason)}</div>`).join('')||(ledgerMode==='site'?'<p class="hint">'+esc(sharedLoading?'Đang tải sổ chung…':sharedError||'Site này chưa có lượt kiểm trên Drive.')+'</p>':'<p class="hint">Chưa có lượt kiểm đã lưu.</p>');}
+function save(){if(!result||$('save').disabled)return;const c=context();if(!c.site||!c.person||!L.gtinValid(c.barcode)||(c.mode!=='NONE'&&!c.code)){ $('message').textContent='Cần site, tên người kiểm, mã TP/PKG (nếu đối chiếu) và barcode hợp lệ để ghi sổ.';return;}const qr=result.qr,record={id:globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random(),at:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Ho_Chi_Minh'}),...c,qr_gtin:qr?.gtin||'',serial:qr?.serial||'',status:result.status,ket_luan:{pass:'ĐẠT',fail:'KHÔNG ĐẠT',warn:'CẦN XÁC NHẬN'}[result.status],reason:result.reason,scope:result.scope||$('modeHint').textContent,master_source:meta.name,master_at:meta.at,name:result.name||(context().mode==='NONE'?'':L.resolve(master,context()).name||''),device:navigator.userAgent||'',app_version:'3.0'};const next=[record,...history];if(put('history',next)){history=next;renderHistory();$('save').disabled=true;$('message').textContent='Đã lưu lượt kiểm trên máy.';driveSync.enqueue(record);driveSync.flush(true).then(ok=>{if(ok&&ledgerMode==='site')loadShared();});}}
 function renderMaster(){const issues=L.audit(master),valid=master.filter(L.usable).length;$('masterCount').textContent=master.length+' dòng';$('masterInfo').textContent=`Nguồn: ${meta.name}. Nạp: ${meta.at}. ${valid} dòng đủ điều kiện cơ bản; ${new Set(issues.map(r=>r.source_row)).size} dòng cần rà. ${master.filter(r=>!r.site).length} dòng thiếu site, ${master.filter(r=>r.trang_thai==='CHO_DUYET').length} dòng chờ duyệt. PKG xung đột vẫn bị chặn khi kiểm.`;}
 const promises={};function loadScript(name,urls,ready){if(ready())return Promise.resolve();if(promises[name])return promises[name];promises[name]=(async()=>{for(const url of urls){try{await new Promise((resolve,reject)=>{const s=document.createElement('script');let done=false;const finish=fn=>{if(done)return;done=true;clearTimeout(timer);s.onload=s.onerror=null;fn();};const timer=setTimeout(()=>{s.remove();finish(()=>reject(Error('Hết thời gian tải thư viện')));},10000);s.src=url;s.onload=()=>finish(resolve);s.onerror=()=>{s.remove();finish(()=>reject(Error('Không tải được thư viện')));};document.head.appendChild(s);});if(ready())return;}catch{}}throw Error('Không tải được thư viện '+name+'. Kiểm tra mạng hoặc dùng nhập tay / master JSON, CSV.');})();promises[name].catch(()=>delete promises[name]);return promises[name];}
 const scannerLib=()=>loadScript('html5-qrcode',['vendor/html5-qrcode.min.js','https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js','https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'],()=>!!window.Html5Qrcode);
 async function importMaster(file){if(!file)return;try{let rows;if(/\.xlsx$/i.test(file.name)){await loadScript('XLSX',['vendor/xlsx.full.min.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'],()=>!!window.XLSX);const workbook=XLSX.read(await file.arrayBuffer(),{type:'array'});const sheet=workbook.Sheets['in']||workbook.Sheets[workbook.SheetNames[0]];rows=XLSX.utils.sheet_to_json(sheet,{defval:'',raw:true});if(rows.length&&!['ma_pkg','cap','gtin','item_tp','site','trang_thai'].every(k=>Object.hasOwn(rows[0],k)))throw Error('XLSX thiếu cột master bắt buộc.');}else if(/\.csv$/i.test(file.name))rows=L.parseCSV(await file.text());else {const data=JSON.parse(await file.text());rows=Array.isArray(data)?data:data.rows;}const clean=L.normalize(rows);if(!clean.length)throw Error('Master không có dòng sản phẩm.');if(!clean.some(r=>r.ma_pkg||r.item_tp))throw Error('Không có mã TP/PKG.');const newMeta={name:file.name,at:new Date().toLocaleString('vi-VN')};if(!put('master',clean))return;put('meta',newMeta);master=clean;meta=newMeta;fillSites();controls();renderMaster();$('message').textContent=`Đã nạp ${master.length} dòng. Các dòng thiếu dữ liệu hoặc chờ duyệt sẽ không được dùng để kết luận Đạt.`;}catch(e){$('message').textContent='Không nạp master: '+e.message;}}
-function formats(kind){const F=window.Html5QrcodeSupportedFormats;return kind==='qr'?[F.QR_CODE]:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.ITF,F.CODE_128];}
-async function cleanup(){cancelAnimationFrame(frame);frame=0;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}if(scan){const old=scan;scan=null;try{if(old.isScanning)await old.stop();}catch{}try{old.clear();}catch{}}$('reader').innerHTML='';}
-async function closeCamera(){scanEpoch++;await cleanup();if($('camera').open)$('camera').close();}
-async function accept(text,kind,epoch){if(epoch!==scanEpoch)return;if(kind==='bar'&&!L.gtinValid(text))return;const target=kind==='qr'?'qr':'barcode';await closeCamera();$(target).value=text;invalidate();$('message').textContent='Đã đọc '+(kind==='qr'?'QR':'barcode')+'. Bấm Đối chiếu khi đã đủ thông tin.';}
-async function nativeStart(kind,epoch){if(!globalThis.BarcodeDetector)return false;const requested=kind==='qr'?['qr_code']:['ean_13','ean_8','upc_a','upc_e','itf','code_128'];const supported=await BarcodeDetector.getSupportedFormats();const available=requested.filter(f=>supported.includes(f));if(epoch!==scanEpoch)return true;if(!available.length)return false;if(kind==='bar'&&context().mode!=='NONE'&&context().cap==='THUNG'&&!available.includes('itf'))return false;const det=new BarcodeDetector({formats:available}),video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.muted=true;$('reader').append(video);const media=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});if(epoch!==scanEpoch){media.getTracks().forEach(t=>t.stop());return true;}stream=media;video.srcObject=stream;await video.play();let last='',reads=0,busy=false;async function loop(){if(epoch!==scanEpoch)return;if(!busy&&video.readyState>=2){busy=true;try{const found=await det.detect(video);const raw=found.find(r=>kind==='qr'||L.gtinValid(r.rawValue))?.rawValue;if(raw){reads=raw===last?reads+1:1;last=raw;if(reads>=2){await accept(raw,kind,epoch);return;}}else{last='';reads=0;}}catch{}finally{busy=false;}}if(epoch===scanEpoch)frame=requestAnimationFrame(loop);}frame=requestAnimationFrame(loop);return true;}
-async function startCamera(kind){const epoch=++scanEpoch;await cleanup();scanKind=kind;$('cameraTitle').textContent=kind==='qr'?'Quét QR trên nhãn':'Quét barcode bao bì';$('cameraMsg').textContent='Đang mở camera…';if(!$('camera').open)$('camera').showModal();try{if(!isSecureContext||!navigator.mediaDevices?.getUserMedia)throw Error('Camera cần mở app qua HTTPS hoặc localhost. Có thể dùng ảnh hoặc nhập tay.');if(await nativeStart(kind,epoch)){if(epoch===scanEpoch)$('cameraMsg').textContent='Giữ mã rõ nét; app cần đọc cùng mã 2 lần.';return;}await scannerLib();if(epoch!==scanEpoch)return;const instance=new Html5Qrcode('reader',{formatsToSupport:formats(kind),verbose:false});scan=instance;let last='',reads=0,accepted=false;await instance.start({facingMode:'environment'},{fps:10,aspectRatio:1.333},raw=>{if(accepted||epoch!==scanEpoch)return;if(kind==='bar'&&!L.gtinValid(raw))return;reads=raw===last?reads+1:1;last=raw;if(reads>=2){accepted=true;accept(raw,kind,epoch);}},()=>{});if(epoch!==scanEpoch){try{if(instance.isScanning)await instance.stop();instance.clear();}catch{}return;}$('cameraMsg').textContent='Giữ mã rõ nét; app cần đọc cùng mã 2 lần.';}catch(e){if(epoch===scanEpoch){await cleanup();$('cameraMsg').textContent='Không mở được camera: '+(e.message||String(e))+'. Kiểm tra quyền camera hoặc dùng ảnh/nhập tay.';}}}
-async function scanImage(file,kind){if(!file)return;const epoch=++scanEpoch;await cleanup();$('cameraTitle').textContent='Đọc mã từ ảnh';$('cameraMsg').textContent='Đang đọc…';if(!$('camera').open)$('camera').showModal();try{let raw='';if(globalThis.BarcodeDetector){const supported=await BarcodeDetector.getSupportedFormats(),requested=kind==='qr'?['qr_code']:['ean_13','ean_8','upc_a','upc_e','itf','code_128'],f=requested.filter(x=>supported.includes(x));if(f.length){const bitmap=await createImageBitmap(file);try{const found=await new BarcodeDetector({formats:f}).detect(bitmap);raw=found.find(r=>kind==='qr'||L.gtinValid(r.rawValue))?.rawValue||'';}finally{bitmap.close();}}}if(!raw){await scannerLib();if(epoch!==scanEpoch)return;scan=new Html5Qrcode('reader',{formatsToSupport:formats(kind),verbose:false});raw=await scan.scanFile(file,true);}if(kind==='bar'&&!L.gtinValid(raw))throw Error('Ảnh chưa đọc được GTIN hợp lệ.');await accept(raw,kind,epoch);}catch(e){if(epoch===scanEpoch){await cleanup();$('cameraMsg').textContent='Chưa đọc được mã từ ảnh. Chụp sát, rõ nét hoặc nhập tay. '+(e.message||String(e));}}}
-$('mode').onchange=()=>controls();$('site').onchange=()=>controls();$('cap').onchange=()=>controls();$('useQR').onchange=()=>controls();$('person').oninput=()=>{invalidate();remember();};$('qr').oninput=$('barcode').oninput=invalidate;$('search').oninput=()=>{selected='';$('chosen').textContent='';resetScans();renderHits();};$('search').onkeydown=e=>{if(e.key==='Enter')choose($('search').value);};$('hits').onclick=e=>{const b=e.target.closest('[data-code]');if(b)choose(b.dataset.code);};$('check').onclick=()=>{if(!selected&&$('mode').value!=='NONE'&&$('search').value.trim()){const q=$('qr').value,b=$('barcode').value;choose($('search').value);$('qr').value=q;$('barcode').value=b;}check();};$('save').onclick=save;$('next').onclick=()=>{resetScans();$('message').textContent='';(requiresQR()?$('qr'):$('barcode')).focus();};$('export').onclick=()=>{const rows=history.filter(r=>!$('historySite').value||r.site===$('historySite').value);download('So_kiem_QR.csv',L.csv(rows,['at','site','person','mode','code','cap','barcode','qr_gtin','serial','ket_luan','reason','scope','qr','master_source','master_at','id']),'text/csv;charset=utf-8');};$('historySite').onchange=renderHistory;$('import').onchange=e=>{importMaster(e.target.files[0]);e.target.value='';};$('downloadMaster').onclick=()=>download('master.json',JSON.stringify({source:meta.name,loaded_at:meta.at,rows:master},null,2),'application/json');$('audit').onclick=()=>download('Master_can_ra.csv',L.csv(L.audit(master),['source_row','ma_pkg','item_tp','site','gtin','trang_thai','reason']),'text/csv;charset=utf-8');document.querySelectorAll('[data-scan]').forEach(b=>b.onclick=()=>startCamera(b.dataset.scan));document.querySelectorAll('[data-file]').forEach(f=>f.onchange=e=>{scanImage(e.target.files[0],f.dataset.file);e.target.value='';});$('closeCamera').onclick=closeCamera;$('camera').addEventListener('cancel',e=>{e.preventDefault();closeCamera();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&$('camera').open)closeCamera();});window.addEventListener('pagehide',()=>{stream?.getTracks().forEach(t=>t.stop());});
-const prefs=read('prefs',{});$('person').value=prefs.person||'';$('mode').value=['TP','PKG','NONE'].includes(prefs.mode)?prefs.mode:'TP';$('cap').value=prefs.cap==='THUNG'?'THUNG':'DON_VI';$('useQR').checked=prefs.useQR!==false;fillSites();controls(false);renderMaster();renderHistory();
+function ready(){if(!$('site').value||!$('person').value.trim()){$('message').textContent='Chọn site và nhập tên người kiểm trước khi quét.';return false;}return true;}
+function updateSteps(){const c=context(),have=c.mode==='NONE'||!!selected,q=requiresQR();$('qrCard').setAttribute('aria-disabled',String(!have));$('product').classList.toggle('done',!!selected);$('barCard').setAttribute('aria-disabled',String(!have||(q&&!$('qr').value.trim())));document.querySelectorAll('[data-scan]').forEach(b=>b.disabled=!have||(b.dataset.scan==='bar'&&q&&!$('qr').value.trim()));}
+async function ensureScanner(){
+ const native=!!globalThis.BarcodeDetector;
+ if(!globalThis.Html5Qrcode)await scannerLib();
+ // Additional decoders improve still/crop scanning; do not delay the first camera view.
+ loadScript('barcode-detector',['vendor/bd-ponyfill.js','https://cdn.jsdelivr.net/npm/barcode-detector@3.2.2/dist/iife/ponyfill.js'],()=>!!window.BarcodeDetectionAPI).catch(()=>{});
+ loadScript('jsQR',['vendor/jsQR.js','https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'],()=>!!window.jsQR).catch(()=>{});
+ if(native&&!globalThis.Html5Qrcode)scannerLib().catch(()=>{});
+}
+async function openScan(kind){
+ if(!ready())return;if(context().mode!=='NONE'&&!selected){$('message').textContent='Chọn mã đang chạy trước khi quét.';return;}
+ if(kind==='bar'&&requiresQR()&&!$('qr').value.trim()){$('message').textContent='Quét QR trước khi quét barcode.';return;}
+ if(!isSecureContext||!navigator.mediaDevices?.getUserMedia){$('message').textContent='Mở app qua HTTPS/localhost và cho phép camera. Có thể dùng nhập tay.';return;}
+ try{
+  $('message').textContent='Đang chuẩn bị bộ quét…';await ensureScanner();$('message').textContent='';
+  const q=requiresQR(),g=await Scan.session({primary:kind==='qr'?'qr':'bar',barKind:context().mode==='TP'||context().mode==='NONE'?'any':context().cap==='THUNG'?'thung':'don_vi',qr:q&&(kind==='qr'||!$('qr').value.trim()),bar:kind==='bar'||!$('barcode').value.trim()});
+  if(g.qr){$('qr').value=g.qr.text;$('qrRead').textContent='Đã đọc QR: '+g.qr.text;}
+  if(g.bar){$('barcode').value=g.bar.text;$('barRead').textContent='Đã đọc barcode: '+g.bar.text;}
+  invalidate();if($('barcode').value.trim()&&(!q||$('qr').value.trim())){check();save();}
+ }catch(e){if(e.message!=='huy')$('message').textContent=e.message||String(e);}
+}
+async function toggleTorch(){const b=$('camTorch'),on=b.getAttribute('aria-pressed')!=='true';if(!Live.caps().torch){Scan.msg('Trình duyệt/thiết bị này chưa hỗ trợ bật đèn.');return;}if(await Live.set('torch',on))b.setAttribute('aria-pressed',String(on));else Scan.msg('Không bật được đèn trên thiết bị này.');}
+async function toggleZoom(){const b=$('camZoom'),on=b.getAttribute('aria-pressed')!=='true',caps=Live.caps();if(caps.zoom&&caps.zoom.max>=2){if(!await Live.set('zoom',on?2:Math.max(1,caps.zoom.min||1))){Scan.msg('Không điều chỉnh được zoom camera.');return;}}else{Live.digitalZoom=on?2:1;const video=document.querySelector('#reader video');if(video)video.style.transform=on?'scale(2)':'';Scan.msg(on?'Phóng 2x bằng ảnh số. Có thể dùng Chụp và khoanh để đọc mã nhỏ.':'');}b.setAttribute('aria-pressed',String(on));}
+$('mode').onchange=()=>{if($('mode').value==='NONE')$('useQR').checked=true;$('cap').value=$('mode').value==='TP'?'ANY':'DON_VI';controls();};document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{$('mode').value=b.dataset.mode;$('mode').onchange();});document.querySelectorAll('[data-qr]').forEach(b=>b.onclick=()=>{$('useQR').checked=b.dataset.qr==='1';$('useQR').onchange();});$('pick').onclick=()=>choose($('search').value);$('site').onchange=()=>{controls();sharedRows=[];sharedSite='';if(ledgerMode==='site')loadShared();};$('cap').onchange=()=>controls();$('useQR').onchange=()=>controls();$('person').oninput=()=>{invalidate();remember();};$('qr').oninput=$('barcode').oninput=invalidate;$('search').oninput=()=>{selected='';$('chosen').textContent='';resetScans();renderHits();};$('search').onkeydown=e=>{if(e.key==='Enter')choose($('search').value);};$('hits').onclick=e=>{const b=e.target.closest('[data-code]');if(b)choose(b.dataset.code);};$('check').onclick=()=>{if(!selected&&$('mode').value!=='NONE'&&$('search').value.trim()){const q=$('qr').value,b=$('barcode').value;choose($('search').value);$('qr').value=q;$('barcode').value=b;}check();save();};$('save').onclick=save;$('next').onclick=()=>{resetScans();$('message').textContent='';(requiresQR()?$('qr'):$('barcode')).focus();};$('export').onclick=()=>{const rows=ledgerRows();download('So_kiem_QR.csv',L.csv(rows,['at','site','person','mode','code','cap','barcode','qr_gtin','serial','ket_luan','reason','scope','qr','master_source','master_at','id']),'text/csv;charset=utf-8');};$('historySite').onchange=renderHistory;$('import').onchange=e=>{importMaster(e.target.files[0]);e.target.value='';};$('downloadMaster').onclick=()=>download('master.json',JSON.stringify({source:meta.name,loaded_at:meta.at,rows:master},null,2),'application/json');$('audit').onclick=()=>download('Master_can_ra.csv',L.csv(L.audit(master),['source_row','ma_pkg','item_tp','site','gtin','trang_thai','reason']),'text/csv;charset=utf-8');document.querySelectorAll('[data-scan]').forEach(b=>b.onclick=()=>openScan(b.dataset.scan));$('camClose').onclick=()=>Scan.cancel();$('camSnap').onclick=()=>Scan.snap();$('camFileBtn').onclick=()=>$('camFile').click();$('camFile').onchange=e=>{const f=e.target.files[0];e.target.value='';Scan.fromFile(f);};$('camRead').onclick=()=>Scan.readCrop();$('camRetake').onclick=()=>Scan.retake();Scan.bindCrop();$('camTorch').onclick=toggleTorch;$('camZoom').onclick=toggleZoom;$('allSite').onclick=()=>{ledgerMode='site';$('historySite').value='';loadShared();};$('localLedger').onclick=()=>{ledgerMode='local';$('historySite').value='';renderHistory();};document.addEventListener('visibilitychange',()=>{if(document.hidden&&Scan.res)Scan.cancel();});window.addEventListener('pagehide',()=>Live.stop());
+async function driveRequest(config,payload){
+ const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),30000);
+ try{const response=await fetch(config.url,{method:'POST',credentials:'omit',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...payload,token:config.token}),signal:ctl.signal});if(!response.ok)throw Error('Máy chủ trả lỗi '+response.status+'. Kiểm tra triển khai Web app.');let data;try{data=await response.json();}catch{throw Error('Web app chưa trả JSON. Kiểm tra URL /exec và quyền truy cập Anyone.');}if(!data.ok)throw Error(data.error||'Không ghi được sổ kiểm.');return data;}catch(e){if(e.name==='AbortError')throw Error('Chưa có xác nhận từ Drive, giữ lượt kiểm để gửi lại.');if(e instanceof TypeError)throw Error('Không kết nối được Apps Script. Kiểm tra mạng, URL /exec và quyền Web app.');throw e;}finally{clearTimeout(timer);}
+}
+function syncStatus(state){$('driveStatus').textContent=state.busy?'Đang gửi lượt kiểm lên Google Drive…':!state.configured?'Chưa kết nối Drive · '+state.pending+' lượt chờ gửi.':state.error?'Đã lưu trên máy · '+state.pending+' lượt chờ gửi. '+state.error:state.pending?state.pending+' lượt đang chờ gửi lên Drive.':'Đã đồng bộ Google Drive · '+state.sent+' lượt của máy này.';if(!state.busy)renderHistory();}
+const driveSync=new QRSync({read,write:put,request:driveRequest,onChange:syncStatus});
+let ledgerLoadEpoch=0;
+async function loadShared(){const epoch=++ledgerLoadEpoch,site=$('site').value;sharedRows=[];sharedSite=site;sharedLoading=true;sharedError='';renderHistory();try{if(!site)throw Error('Chọn site để xem sổ chung.');const rows=await driveSync.list(site);if(epoch!==ledgerLoadEpoch||site!==$('site').value)return;sharedRows=rows;sharedError='';}catch(e){if(epoch!==ledgerLoadEpoch)return;sharedError=e.message||String(e);if(!driveSync.configured())$('driveSettings').open=true;}finally{if(epoch===ledgerLoadEpoch){sharedLoading=false;renderHistory();}}}
+$('connectDrive').onclick=async()=>{const b=$('connectDrive');b.disabled=true;$('connectStatus').textContent='Đang kiểm tra kết nối…';try{await driveSync.connect($('driveUrl').value,$('driveToken').value);$('connectStatus').textContent='Đã kết nối đúng Google Sheet của anh.';driveSync.enqueue([...history].reverse());await driveSync.flush(true);if(ledgerMode==='site')await loadShared();}catch(e){$('connectStatus').textContent=e.message||String(e);}finally{b.disabled=false;}};
+$('retryDrive').onclick=async()=>{driveSync.enqueue([...history].reverse());await driveSync.flush(true);if(ledgerMode==='site')loadShared();};$('refreshLedger').onclick=()=>{ledgerMode='site';$('historySite').value='';loadShared();};
+const driveConfig=driveSync.config();$('driveUrl').value=driveConfig.url||'';$('driveToken').value=driveConfig.token||'';
+function resumeSync(){driveSync.enqueue([...history].reverse());driveSync.flush();}
+window.addEventListener('online',resumeSync);document.addEventListener('visibilitychange',()=>{if(!document.hidden)resumeSync();});setInterval(resumeSync,30000);
+const prefs=read('prefs',{});$('person').value=prefs.person||'';$('mode').value=['TP','PKG','NONE'].includes(prefs.mode)?prefs.mode:'TP';$('cap').value=$('mode').value==='TP'?'ANY':prefs.cap==='THUNG'?'THUNG':'DON_VI';$('useQR').checked=$('mode').value==='NONE'||prefs.useQR!==false;fillSites();controls(false);renderMaster();renderHistory();
 if(master.some(r=>!r.site))$('message').textContent=`Master có ${master.filter(r=>!r.site).length} dòng thiếu site; app giữ nguyên và không dùng các dòng này để kết luận Đạt.`;
+
+resumeSync();
 </script></body></html>
